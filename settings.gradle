@@ -1,0 +1,2 @@
+include ':app', ':equalizer'
+rootProject.name='BSEqualizer'
