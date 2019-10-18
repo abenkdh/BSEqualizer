@@ -3,6 +3,7 @@ package com.benkkstudio.equalizer;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -11,6 +12,7 @@ import android.media.audiofx.BassBoost;
 import android.media.audiofx.Equalizer;
 import android.media.audiofx.PresetReverb;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,11 +28,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.fragment.app.DialogFragment;
-
 import com.db.chart.model.LineSet;
 import com.db.chart.view.AxisController;
 import com.db.chart.view.ChartView;
@@ -38,9 +35,15 @@ import com.db.chart.view.LineChartView;
 
 import java.util.ArrayList;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.DialogFragment;
+
 
 public class DialogEqualizerFragment extends DialogFragment {
-
+    SharedPreferences sharedpreference;
+    static Context contextx;
     private static int           accentAlpha     = Color.BLUE;
     private static int           darkBackground  = Color.GRAY;
     private static int           textColor       = Color.WHITE;
@@ -79,6 +82,7 @@ public class DialogEqualizerFragment extends DialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sharedpreference = PreferenceManager.getDefaultSharedPreferences(contextx);
         mEqualizer = new Equalizer(0, audioSesionId);
         bassBoost = new BassBoost(0, audioSesionId);
         bassBoost.setEnabled(true);
@@ -311,17 +315,18 @@ public class DialogEqualizerFragment extends DialogFragment {
             textView.setTextColor(textColor);
             textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
-            if (Settings.isEqualizerReloaded) {
+            if (!sharedpreference.contains("1")) {
                 points[i] = Settings.seekbarpos[i] - lowerEqualizerBandLevel;
                 dataset.addPoint(frequencyHeaderTextView.getText().toString(), points[i]);
                 seekBar.setProgress(Settings.seekbarpos[i] - lowerEqualizerBandLevel);
             } else {
+                mEqualizer.setBandLevel(equalizerBandIndex, (short) (sharedpreference.getInt(String.valueOf(seekBar.getId()),0) + lowerEqualizerBandLevel));
                 points[i] = mEqualizer.getBandLevel(equalizerBandIndex) - lowerEqualizerBandLevel;
                 dataset.addPoint(frequencyHeaderTextView.getText().toString(), points[i]);
-                seekBar.setProgress(mEqualizer.getBandLevel(equalizerBandIndex) - lowerEqualizerBandLevel);
+                seekBar.setProgress(sharedpreference.getInt(String.valueOf(seekBar.getId()),0));
                 Settings.seekbarpos[i] = mEqualizer.getBandLevel(equalizerBandIndex);
-                Settings.isEqualizerReloaded = true;
             }
+
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -331,6 +336,7 @@ public class DialogEqualizerFragment extends DialogFragment {
                     Settings.equalizerModel.getSeekbarpos()[seekBar.getId()] = (progress + lowerEqualizerBandLevel);
                     dataset.updateValues(points);
                     chart.notifyDataUpdate();
+                    sharedpreference.edit().putInt(String.valueOf(seekBar.getId()), progress).apply();
                 }
 
                 @Override
@@ -389,13 +395,16 @@ public class DialogEqualizerFragment extends DialogFragment {
         }
 
         presetSpinner.setAdapter(equalizerPresetSpinnerAdapter);
-        if (Settings.isEqualizerReloaded && Settings.presetPos != 0) {
+
+        if (sharedpreference.contains("SPINNER_POSITION")) {
+            Settings.presetPos = sharedpreference.getInt("SPINNER_POSITION",0);
             presetSpinner.setSelection(Settings.presetPos);
         }
 
         presetSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                sharedpreference.edit().putInt("SPINNER_POSITION", position).apply();
                 try {
                     if (position != 0) {
                         mEqualizer.usePreset((short) (position - 1));
@@ -463,6 +472,10 @@ public class DialogEqualizerFragment extends DialogFragment {
 
         public Builder darkColor(int color) {
             darkBackground = color;
+            return this;
+        }
+        public Builder setActivity(Context context) {
+            contextx = context;
             return this;
         }
 
