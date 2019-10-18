@@ -1,10 +1,12 @@
 package uc.benkkstudio.bsequalizer;
 
+import android.content.SharedPreferences;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
 
@@ -15,11 +17,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
-
+    SharedPreferences sharedpreference;
+    int lowerEqualizerBandLevel = -1500;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        sharedpreference = PreferenceManager.getDefaultSharedPreferences(this);
         Button button = findViewById(R.id.buttonEQ);
         final MediaPlayer mediaPlayer = new MediaPlayer();
         if(!mediaPlayer.isPlaying()){
@@ -34,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
 
         EqualizerFragment equalizerFragment = EqualizerFragment.newBuilder()
                 .setAccentColor(Color.parseColor("#ffffff"))

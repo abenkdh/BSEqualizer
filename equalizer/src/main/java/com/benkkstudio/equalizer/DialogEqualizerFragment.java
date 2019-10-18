@@ -13,10 +13,12 @@ import android.media.audiofx.Equalizer;
 import android.media.audiofx.PresetReverb;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -85,7 +87,7 @@ public class DialogEqualizerFragment extends DialogFragment {
         sharedpreference = PreferenceManager.getDefaultSharedPreferences(contextx);
         mEqualizer = new Equalizer(0, audioSesionId);
         bassBoost = new BassBoost(0, audioSesionId);
-        bassBoost.setEnabled(true);
+        bassBoost.setEnabled(false);
         BassBoost.Settings bassBoostSettingTemp = bassBoost.getProperties();
         BassBoost.Settings bassBoostSetting     = new BassBoost.Settings(bassBoostSettingTemp.toString());
         bassBoostSetting.strength = (1000 / 19);
@@ -93,9 +95,9 @@ public class DialogEqualizerFragment extends DialogFragment {
 
         presetReverb = new PresetReverb(0, audioSesionId);
         presetReverb.setPreset(PresetReverb.PRESET_NONE);
-        presetReverb.setEnabled(true);
+        presetReverb.setEnabled(false);
         Settings.equalizerModel = new EqualizerModel();
-        mEqualizer.setEnabled(true);
+        mEqualizer.setEnabled(false);
     }
 
     @Override
@@ -105,8 +107,8 @@ public class DialogEqualizerFragment extends DialogFragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         return inflater.inflate(R.layout.dialog_fragment_equalizer, container, false);
     }
 
@@ -128,10 +130,21 @@ public class DialogEqualizerFragment extends DialogFragment {
         TextView fragTitle = view.findViewById(R.id.equalizer_fragment_title);
         fragTitle.setTextColor(textColor);
         SwitchCompat equalizerSwitch = view.findViewById(R.id.equalizer_switch);
-        equalizerSwitch.setChecked(true);
+        if(sharedpreference.contains("ENABLE_EQUALIZER") && sharedpreference.getBoolean("ENABLE_EQUALIZER", false)){
+            equalizerSwitch.setChecked(true);
+            mEqualizer.setEnabled(true);
+            bassBoost.setEnabled(true);
+            presetReverb.setEnabled(true);
+        } else {
+            equalizerSwitch.setChecked(false);
+            mEqualizer.setEnabled(false);
+            bassBoost.setEnabled(false);
+            presetReverb.setEnabled(false);
+        }
         equalizerSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                sharedpreference.edit().putBoolean("ENABLE_EQUALIZER", isChecked).apply();
                 mEqualizer.setEnabled(isChecked);
                 bassBoost.setEnabled(isChecked);
                 presetReverb.setEnabled(isChecked);
@@ -321,6 +334,7 @@ public class DialogEqualizerFragment extends DialogFragment {
                 seekBar.setProgress(Settings.seekbarpos[i] - lowerEqualizerBandLevel);
             } else {
                 mEqualizer.setBandLevel(equalizerBandIndex, (short) (sharedpreference.getInt(String.valueOf(seekBar.getId()),0) + lowerEqualizerBandLevel));
+                Log.d("ABENK 2", String.valueOf(sharedpreference.getInt(String.valueOf(seekBar.getId()),0) + lowerEqualizerBandLevel));
                 points[i] = mEqualizer.getBandLevel(equalizerBandIndex) - lowerEqualizerBandLevel;
                 dataset.addPoint(frequencyHeaderTextView.getText().toString(), points[i]);
                 seekBar.setProgress(sharedpreference.getInt(String.valueOf(seekBar.getId()),0));

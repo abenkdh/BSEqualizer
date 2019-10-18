@@ -105,7 +105,7 @@ public class EqualizerFragment extends Fragment {
 
         mEqualizer = new Equalizer(0, audioSesionId);
         bassBoost = new BassBoost(0, audioSesionId);
-        bassBoost.setEnabled(true);
+        bassBoost.setEnabled(false);
         BassBoost.Settings bassBoostSettingTemp = bassBoost.getProperties();
         BassBoost.Settings bassBoostSetting = new BassBoost.Settings(bassBoostSettingTemp.toString());
         bassBoostSetting.strength = (1000 / 19);
@@ -113,9 +113,9 @@ public class EqualizerFragment extends Fragment {
 
         presetReverb = new PresetReverb(0, audioSesionId);
         presetReverb.setPreset(PresetReverb.PRESET_NONE);
-        presetReverb.setEnabled(true);
+        presetReverb.setEnabled(false);
         Settings.equalizerModel = new EqualizerModel();
-        mEqualizer.setEnabled(true);
+        mEqualizer.setEnabled(false);
     }
 
     @Override
@@ -149,7 +149,17 @@ public class EqualizerFragment extends Fragment {
 
 
         equalizerSwitch = view.findViewById(R.id.equalizer_switch);
-        equalizerSwitch.setChecked(true);
+        if(sharedpreference.contains("ENABLE_EQUALIZER") && sharedpreference.getBoolean("ENABLE_EQUALIZER", false)){
+            equalizerSwitch.setChecked(true);
+            mEqualizer.setEnabled(true);
+            bassBoost.setEnabled(true);
+            presetReverb.setEnabled(true);
+        } else {
+            equalizerSwitch.setChecked(false);
+            mEqualizer.setEnabled(false);
+            bassBoost.setEnabled(false);
+            presetReverb.setEnabled(false);
+        }
         equalizerSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
