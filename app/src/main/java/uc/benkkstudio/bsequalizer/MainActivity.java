@@ -2,7 +2,6 @@ package uc.benkkstudio.bsequalizer;
 
 import android.content.SharedPreferences;
 import android.content.res.AssetFileDescriptor;
-import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -11,7 +10,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.benkkstudio.equalizer.DialogEqualizerFragment;
-import com.benkkstudio.equalizer.EqualizerFragment;
+import com.benkkstudio.equalizer.Settings;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -39,15 +38,18 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-
-        EqualizerFragment equalizerFragment = EqualizerFragment.newBuilder()
-                .setAccentColor(Color.parseColor("#ffffff"))
-                .setAudioSessionId(mediaPlayer.getAudioSessionId())
-                .setActivity(this)
-                .build();
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.eqFrame, equalizerFragment)
-                .commit();
+        Settings.setEqualizer(0, mediaPlayer.getAudioSessionId());
+        Settings.setBassBoost(0, mediaPlayer.getAudioSessionId());
+        Settings.setPresetReverb(0, mediaPlayer.getAudioSessionId());
+        DialogEqualizerFragment.loadEqualizer(this);
+//        EqualizerFragment equalizerFragment = EqualizerFragment.newBuilder()
+//                .setAccentColor(Color.parseColor("#ffffff"))
+//                .setAudioSessionId(mediaPlayer.getAudioSessionId())
+//                .setActivity(this)
+//                .build();
+//        getSupportFragmentManager().beginTransaction()
+//                .replace(R.id.eqFrame, equalizerFragment)
+//                .commit();
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -147,7 +147,6 @@ public class EqualizerFragment extends Fragment {
 
         fragTitle = view.findViewById(R.id.equalizer_fragment_title);
 
-
         equalizerSwitch = view.findViewById(R.id.equalizer_switch);
         if(sharedpreference.contains("ENABLE_EQUALIZER") && sharedpreference.getBoolean("ENABLE_EQUALIZER", false)){
             equalizerSwitch.setChecked(true);

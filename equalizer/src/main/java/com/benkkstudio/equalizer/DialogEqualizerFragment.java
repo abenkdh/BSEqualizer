@@ -2,6 +2,7 @@ package com.benkkstudio.equalizer;
 
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -85,25 +86,38 @@ public class DialogEqualizerFragment extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         sharedpreference = PreferenceManager.getDefaultSharedPreferences(contextx);
-        mEqualizer = new Equalizer(0, audioSesionId);
-        bassBoost = new BassBoost(0, audioSesionId);
-        bassBoost.setEnabled(false);
+        mEqualizer = Settings.getEqualizer();
+        bassBoost = Settings.getBassBoost();
         BassBoost.Settings bassBoostSettingTemp = bassBoost.getProperties();
         BassBoost.Settings bassBoostSetting     = new BassBoost.Settings(bassBoostSettingTemp.toString());
         bassBoostSetting.strength = (1000 / 19);
         bassBoost.setProperties(bassBoostSetting);
 
-        presetReverb = new PresetReverb(0, audioSesionId);
+        presetReverb = Settings.getPresetReverb();
         presetReverb.setPreset(PresetReverb.PRESET_NONE);
-        presetReverb.setEnabled(false);
         Settings.equalizerModel = new EqualizerModel();
-        mEqualizer.setEnabled(false);
+        if(sharedpreference.contains("ENABLE_EQUALIZER") && sharedpreference.getBoolean("ENABLE_EQUALIZER", false)){
+            mEqualizer.setEnabled(true);
+            bassBoost.setEnabled(true);
+            presetReverb.setEnabled(true);
+        } else {
+            mEqualizer.setEnabled(false);
+            bassBoost.setEnabled(false);
+            presetReverb.setEnabled(false);
+        }
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         ctx = context;
+    }
+
+    public static void loadEqualizer(Activity activity){
+        for (short i = 0; i < 5; i++) {
+            Settings.getEqualizer().setBandLevel(i, (short) (PreferenceManager.getDefaultSharedPreferences(activity).getInt(String.valueOf(i),0) - 1500));
+            Settings.getEqualizer().setEnabled(true);
+        }
     }
 
     @Override
