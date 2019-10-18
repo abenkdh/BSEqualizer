@@ -3,6 +3,7 @@ package com.benkkstudio.equalizer;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -11,15 +12,23 @@ import android.media.audiofx.BassBoost;
 import android.media.audiofx.Equalizer;
 import android.media.audiofx.PresetReverb;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.fragment.app.Fragment;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import com.db.chart.model.LineSet;
 import com.db.chart.view.AxisController;
 import com.db.chart.view.ChartView;
@@ -27,11 +36,18 @@ import com.db.chart.view.LineChartView;
 
 import java.util.ArrayList;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.Fragment;
+
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class EqualizerFragment extends Fragment {
+    SharedPreferences sharedpreference;
+    static Context contextx;
 
     ImageView backBtn;
     TextView fragTitle;
@@ -84,6 +100,9 @@ public class EqualizerFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        sharedpreference = PreferenceManager.getDefaultSharedPreferences(contextx);
+
         mEqualizer = new Equalizer(0, audioSesionId);
         bassBoost = new BassBoost(0, audioSesionId);
         bassBoost.setEnabled(true);
@@ -316,28 +335,31 @@ public class EqualizerFragment extends Fragment {
                     textView = view.findViewById(R.id.textView5);
                     break;
             }
+
+
             seekBarFinal[i] = seekBar;
             seekBar.getProgressDrawable().setColorFilter(new PorterDuffColorFilter(Color.DKGRAY, PorterDuff.Mode.SRC_IN));
             seekBar.getThumb().setColorFilter(new PorterDuffColorFilter(themeColor, PorterDuff.Mode.SRC_IN));
             seekBar.setId(i);
-//            seekBar.setLayoutParams(layoutParams);
             seekBar.setMax(upperEqualizerBandLevel - lowerEqualizerBandLevel);
+
 
             textView.setText(frequencyHeaderTextView.getText());
             textView.setTextColor(Color.WHITE);
             textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
-            if (Settings.isEqualizerReloaded) {
+            if (!sharedpreference.contains("1")) {
                 points[i] = Settings.seekbarpos[i] - lowerEqualizerBandLevel;
                 dataset.addPoint(frequencyHeaderTextView.getText().toString(), points[i]);
                 seekBar.setProgress(Settings.seekbarpos[i] - lowerEqualizerBandLevel);
             } else {
+                mEqualizer.setBandLevel(equalizerBandIndex, (short) (sharedpreference.getInt(String.valueOf(seekBar.getId()),0) + lowerEqualizerBandLevel));
                 points[i] = mEqualizer.getBandLevel(equalizerBandIndex) - lowerEqualizerBandLevel;
                 dataset.addPoint(frequencyHeaderTextView.getText().toString(), points[i]);
-                seekBar.setProgress(mEqualizer.getBandLevel(equalizerBandIndex) - lowerEqualizerBandLevel);
+                seekBar.setProgress(sharedpreference.getInt(String.valueOf(seekBar.getId()),0));
                 Settings.seekbarpos[i] = mEqualizer.getBandLevel(equalizerBandIndex);
-                Settings.isEqualizerReloaded = true;
             }
+
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -347,6 +369,7 @@ public class EqualizerFragment extends Fragment {
                     Settings.equalizerModel.getSeekbarpos()[seekBar.getId()] = (progress + lowerEqualizerBandLevel);
                     dataset.updateValues(points);
                     chart.notifyDataUpdate();
+                    sharedpreference.edit().putInt(String.valueOf(seekBar.getId()), progress).apply();
                 }
 
                 @Override
@@ -406,14 +429,19 @@ public class EqualizerFragment extends Fragment {
 
         presetSpinner.setAdapter(equalizerPresetSpinnerAdapter);
         //presetSpinner.setDropDownWidth((Settings.screen_width * 3) / 4);
-        if (Settings.isEqualizerReloaded && Settings.presetPos != 0) {
-//            correctPosition = false;
+//        if (Settings.isEqualizerReloaded && Settings.presetPos != 0) {
+////            correctPosition = false;
+//            presetSpinner.setSelection(Settings.presetPos);
+//        }
+        if (sharedpreference.contains("SPINNER_POSITION")) {
+            Settings.presetPos = sharedpreference.getInt("SPINNER_POSITION",0);
             presetSpinner.setSelection(Settings.presetPos);
         }
 
         presetSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                sharedpreference.edit().putInt("SPINNER_POSITION", position).apply();
                 try {
                     if (position != 0) {
                         mEqualizer.usePreset((short) (position - 1));
@@ -465,6 +493,11 @@ public class EqualizerFragment extends Fragment {
 
         public Builder setAudioSessionId(int id) {
             this.id = id;
+            return this;
+        }
+
+        public Builder setActivity(Context context) {
+            contextx = context;
             return this;
         }
 
