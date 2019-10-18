@@ -41,7 +41,10 @@ public class MainActivity extends AppCompatActivity {
         Settings.setEqualizer(0, mediaPlayer.getAudioSessionId());
         Settings.setBassBoost(0, mediaPlayer.getAudioSessionId());
         Settings.setPresetReverb(0, mediaPlayer.getAudioSessionId());
-        DialogEqualizerFragment.loadEqualizer(this);
+        if(DialogEqualizerFragment.checkSavedValue(this, DialogEqualizerFragment.ENABLE_EQUALIZER)){
+            DialogEqualizerFragment.loadEqualizer(this);
+        }
+
 //        EqualizerFragment equalizerFragment = EqualizerFragment.newBuilder()
 //                .setAccentColor(Color.parseColor("#ffffff"))
 //                .setAudioSessionId(mediaPlayer.getAudioSessionId())

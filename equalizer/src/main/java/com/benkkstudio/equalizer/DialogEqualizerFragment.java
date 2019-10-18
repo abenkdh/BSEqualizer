@@ -45,7 +45,8 @@ import androidx.fragment.app.DialogFragment;
 
 
 public class DialogEqualizerFragment extends DialogFragment {
-    SharedPreferences sharedpreference;
+    static SharedPreferences sharedpreference;
+    public static final String ENABLE_EQUALIZER = "ENABLE_EQUALIZER";
     static Context contextx;
     private static int           accentAlpha     = Color.BLUE;
     private static int           darkBackground  = Color.GRAY;
@@ -96,7 +97,7 @@ public class DialogEqualizerFragment extends DialogFragment {
         presetReverb = Settings.getPresetReverb();
         presetReverb.setPreset(PresetReverb.PRESET_NONE);
         Settings.equalizerModel = new EqualizerModel();
-        if(sharedpreference.contains("ENABLE_EQUALIZER") && sharedpreference.getBoolean("ENABLE_EQUALIZER", false)){
+        if(sharedpreference.contains(ENABLE_EQUALIZER) && sharedpreference.getBoolean(ENABLE_EQUALIZER, false)){
             mEqualizer.setEnabled(true);
             bassBoost.setEnabled(true);
             presetReverb.setEnabled(true);
@@ -111,6 +112,10 @@ public class DialogEqualizerFragment extends DialogFragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         ctx = context;
+    }
+
+    public static boolean checkSavedValue(Activity activity, String value){
+        return PreferenceManager.getDefaultSharedPreferences(activity).contains(value);
     }
 
     public static void loadEqualizer(Activity activity){
@@ -144,7 +149,7 @@ public class DialogEqualizerFragment extends DialogFragment {
         TextView fragTitle = view.findViewById(R.id.equalizer_fragment_title);
         fragTitle.setTextColor(textColor);
         SwitchCompat equalizerSwitch = view.findViewById(R.id.equalizer_switch);
-        if(sharedpreference.contains("ENABLE_EQUALIZER") && sharedpreference.getBoolean("ENABLE_EQUALIZER", false)){
+        if(sharedpreference.contains(ENABLE_EQUALIZER) && sharedpreference.getBoolean(ENABLE_EQUALIZER, false)){
             equalizerSwitch.setChecked(true);
             mEqualizer.setEnabled(true);
             bassBoost.setEnabled(true);
@@ -158,7 +163,7 @@ public class DialogEqualizerFragment extends DialogFragment {
         equalizerSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                sharedpreference.edit().putBoolean("ENABLE_EQUALIZER", isChecked).apply();
+                sharedpreference.edit().putBoolean(ENABLE_EQUALIZER, isChecked).apply();
                 mEqualizer.setEnabled(isChecked);
                 bassBoost.setEnabled(isChecked);
                 presetReverb.setEnabled(isChecked);
